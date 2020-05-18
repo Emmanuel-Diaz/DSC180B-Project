@@ -37,7 +37,7 @@ def add_dgp_parser(parser):
     
     #Random G or use weights?
     parser.add_argument(
-        '--random_G', action='store_true', default=False,
+        '--random_G', action='store_true', default=True,
         help='Use randomly initialized generator? (default: %(default)s)')
     parser.add_argument(
         '--update_G', action='store_true', default=False,
@@ -48,7 +48,7 @@ def add_dgp_parser(parser):
     
     #Save weights
     parser.add_argument(
-        '--save_G', action='store_true', default=True,
+        '--save_G', action='store_true', default=False,
         help='Save fine-tuned generator and latent vector? (default: %(default)s)')
     parser.add_argument(
         '--ftr_type', type=str, default='Discriminator',

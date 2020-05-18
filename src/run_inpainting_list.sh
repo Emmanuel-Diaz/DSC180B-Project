@@ -27,6 +27,7 @@ python -u -W ignore main.py \
 --use_in False False False False False \
 --resolution 256 \
 --save_G \
+--random_G \
 --weights_root ../data/out \
 --load_weights 256 \
 --G_ch 96 --D_ch 96 \

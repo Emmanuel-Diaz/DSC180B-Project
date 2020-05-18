@@ -12,7 +12,12 @@ def main():
 
     config = vars(parser.parse_args())
     utils.dgp_update_config(config)
-    print(config)
+    
+    cat = ['model', 'dgp_mode', 'list_file', 'exp_path', 'root_dir', 'resolution', 'random_G', 'update_G']
+    for key,val in config.items():
+        if key in cat:
+            print(key,":", str(val))
+    
 
     rank = 0
     if mp.get_start_method(allow_none=True) != 'spawn':

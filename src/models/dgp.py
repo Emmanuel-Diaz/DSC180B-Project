@@ -176,11 +176,18 @@ class DGP(object):
 
                 if i == 0 or (i + 1) % self.config['print_interval'] == 0:
                     if self.rank == 0:
+                        #print(', '.join(
+                        #    ['Stage: [{0}/{1}]'.format(stage + 1, len(self.iterations))] +
+                        #    ['Iter: [{0}/{1}]'.format(i + 1, iteration)] +
+                        #    ['%s : %+4.4f' % (key, loss_dict[key]) for key in loss_dict]
+                        #))
                         print(', '.join(
                             ['Stage: [{0}/{1}]'.format(stage + 1, len(self.iterations))] +
-                            ['Iter: [{0}/{1}]'.format(i + 1, iteration)] +
-                            ['%s : %+4.4f' % (key, loss_dict[key]) for key in loss_dict]
+                            ['Iter: [{0}/{1}]'.format(i + 1, iteration)]
                         ))
+                        print("\t\t", "mse_loss: %+4.4f" % loss_dict['mse_loss_origin'])
+                        print("\t\t", "PSNR: %4.4f" % loss_dict['mse_loss_origin'])
+                        print("\t\t", "SSIM: %4.4f" % loss_dict['ssim'])
                     # save image sheet of the reconstruction process
                     save_imgs = torch.cat((save_imgs, x), dim=0)
                     torchvision.utils.save_image(

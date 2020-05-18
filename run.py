@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import subprocess
 sys.path.append('./src')
 
 import etl
@@ -16,4 +17,8 @@ if __name__ =="__main__":
         if targets[0]=="test":
             #RUN TEST TARGET
             test_target.run_test()
+        if targets[0]=="test-project":
+            #RUN CHECKPOINT 3 TEST
+            subprocess.call(['./src/run_inpainting_list.sh'])
+            print("Output files delivered in ./data/out folder.")
 

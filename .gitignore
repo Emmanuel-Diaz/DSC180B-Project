@@ -10,5 +10,7 @@
 /data/log/*
 /data/out/*
 
+__pycache__/
+
 
 

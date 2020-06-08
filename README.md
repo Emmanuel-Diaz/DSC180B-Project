@@ -16,23 +16,43 @@ TensorFlow - pip3 install tensorflow
 PyTorch - pip3 install torch torchvision
 ```
 
-### Running
+### Getting Started
+
+First, go ahead and clone this repository to your local directory
+```
+git clone https://github.com/Emmanuel-Diaz/DSC180B-Project.git
+```
+
+then install all necessary packages
+
+```
+pip install -r requirements.txt
+```
 
 
-Example - Test
+### Usage
 
+**Running a test example**
+
+Enter the following command to run the network on the 'Spoils of War' image, just like in the report output.
 ```
 python run.py test-project
 ```
 
-Run with custom image and mask
+**Running with custom image and mask**
+
+To use your own custom image and mask for restoration, please perform the following steps.
+1. Place your image to be restored ```img``` in the ```data/input``` directory. (```img``` can be ```.png```,```.jpeg```,```.jpg```)
+2. Place your custom mask ```mask``` in the ```data/input``` directory. (```mask``` must be ```.png```)
+3. Run the following command with your file names.
 
 ```
-python run.py -t [True/False] -i <img.png> -m <mask.png>
+python run.py -t [True/False] -i <img> -m <mask.png>
 ```
--t Trained model
--i Degraded image file name
--m Mask image file name
+
+-t Use a trained model <br>
+-i Degraded image file name<br>
+-m Mask image file name<br>
 
 
 ## Built With

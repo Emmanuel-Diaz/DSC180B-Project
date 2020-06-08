@@ -50,20 +50,25 @@ To use your own custom image and mask for restoration, please perform the follow
 python run.py -t [True/False] -i <img> -m <mask.png>
 ```
 
--t Use a trained model <br>
--i Degraded image file name<br>
--m Mask image file name<br>
+```-t``` Use a trained model <br>
+```-i``` Degraded image file name<br>
+```-m``` Mask image file name<br>
 
 
 ## Built With
 
 * [Python](https://www.python.org/) - Language used
+* [PyTorch](https://www.pytorch.org) - Net Framework
 
 
 ## Version
 
-1.0 Started formatting and configuring
+1.2 Added selective mask inpainting
 
 ## Author
 
-* **Emmanuel Diaz** - *Initial work* - [Emmanuel-Diaz](https://github.com/Emmanuel-Diaz)
+* [Emmanuel Diaz](https://github.com/Emmanuel-Diaz)
+
+* *Deep Generative Prior* by Xingang Pan, Xiaohang Zhan, Bo Dai, Dahua Lin, Chen Change Loy, Ping Luo 
+	* [Report](https://arxiv.org/abs/2003.13659)
+	* [GitHub](https://github.com/XingangPan/deep-generative-prior)

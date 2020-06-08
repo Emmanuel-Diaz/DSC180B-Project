@@ -90,7 +90,7 @@ class Generator(nn.Module):
                  SN_eps=1e-12,
                  G_mixed_precision=False,
                  G_fp16=False,
-                 G_init='ortho',
+                 G_init='N02',
                  skip_init=False,
                  no_optim=False,
                  G_param='SN',

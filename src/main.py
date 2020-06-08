@@ -13,11 +13,15 @@ def main():
     config = vars(parser.parse_args())
     utils.dgp_update_config(config)
     
-    cat = ['model', 'dgp_mode', 'list_file', 'exp_path', 'root_dir', 'resolution', 'random_G', 'update_G']
+    #Print parameters
+    cat = ['model', 'dgp_mode', 'list_file', 'exp_path', 'root_dir', 'resolution', 'random_G', 'update_G', 'custom_mask']
     for key,val in config.items():
         if key in cat:
             print(key,":", str(val))
-    
+
+    if config['custom_mask']:
+        config['mask_path'] = '../data/input/'+config['mask_path']
+        print('mask_path :',config['mask_path'])
 
     rank = 0
     if mp.get_start_method(allow_none=True) != 'spawn':

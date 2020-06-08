@@ -13,27 +13,27 @@ REGEX - pip install regex
 Requests - pip3 install requests
 
 TensorFlow - pip3 install tensorflow
-PyTorch - pip3 install torchvision
-Python Image Library - pip3 install pillow==6.2.2
-NumPy - pip3 install numpy
-Scikit Image - pip3 install scikit-image
-SciPy - pip3 install scipy
-Tensorboard - pip3 install tensorboardX
+PyTorch - pip3 install torch torchvision
 ```
 
 ### Running
 
 
-Using Config File (TBD)
+Example - Test
 
 ```
-python3 run.py [config] [output_path]
+python run.py test-project
 ```
 
-Running the GAN on test file
+Run with custom image and mask
+
 ```
-python3 run.py test-project
+python run.py -t [True/False] -i <img.png> -m <mask.png>
 ```
+-t Trained model
+-i Degraded image file name
+-m Mask image file name
+
 
 ## Built With
 
@@ -42,11 +42,8 @@ python3 run.py test-project
 
 ## Version
 
-1.1 Added GAN models
+1.0 Started formatting and configuring
 
 ## Author
 
-* **Emmanuel Diaz** - [Emmanuel-Diaz](https://github.com/Emmanuel-Diaz)
-
-## Acknowledgement
-GANS adapted from [Deep Generative Prior](https://github.com/XingangPan/deep-generative-prior) and [BigGAN](https://github.com/ajbrock/BigGAN-PyTorch)
+* **Emmanuel Diaz** - *Initial work* - [Emmanuel-Diaz](https://github.com/Emmanuel-Diaz)

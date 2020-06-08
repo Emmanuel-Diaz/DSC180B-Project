@@ -35,9 +35,17 @@ def add_dgp_parser(parser):
         '--dgp_mode', type=str, default='reconstruct',
         help='DGP mode (default: %(default)s)')
     
+    #MY ARGUMENT
+    parser.add_argument(
+        '--mask_path', type=str, default='',
+        help='Load custom mask for input image (default: %(default)s)')
+    parser.add_argument(
+        '--custom_mask', type=str2bool, default=True,
+        help='Using custom loaded mask for input image (default: %(default)s)')
+    
     #Random G or use weights?
     parser.add_argument(
-        '--random_G', action='store_true', default=True,
+        '--random_G', type=str2bool, default=False,
         help='Use randomly initialized generator? (default: %(default)s)')
     parser.add_argument(
         '--update_G', action='store_true', default=False,

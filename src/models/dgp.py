@@ -6,6 +6,7 @@ import torch
 import torch.distributed as dist
 import torch.nn.functional as F
 import torchvision
+from torchvision import transforms
 from PIL import Image
 from skimage import color
 from skimage.measure import compare_psnr, compare_ssim
@@ -23,8 +24,10 @@ class DGP(object):
         if config['dist']:
             self.rank = dist.get_rank()
             self.world_size = dist.get_world_size()
+            
         self.config = config
         self.mode = config['dgp_mode']
+        self.custom_mask = config['custom_mask']
         self.update_G = config['update_G']
         self.update_embed = config['update_embed']
         self.iterations = config['iterations']
@@ -35,8 +38,21 @@ class DGP(object):
         self.z_lrs = config['z_lrs']
         self.use_in = config['use_in']
         self.select_num = config['select_num']
-        self.factor = 2 if self.mode == 'hybrid' else 4  # Downsample factor
-
+        self.factor = 4  # Downsample factor
+        self.mask_path = config['mask_path']
+        
+        #Create selective masking
+        if self.custom_mask:
+            self.mask = torch.ones(1, 1, 256, 256).cuda()
+            x = Image.open(self.mask_path)
+            pil_to_tensor = transforms.ToTensor()(x).unsqueeze_(0)
+            t = Variable(torch.Tensor([0.9]))  # threshold
+            final_mask = F.interpolate(pil_to_tensor,size=(256,256), mode='bilinear')
+            self.mask = (final_mask > t).float() * 1
+            self.mask = self.mask[0][0].cuda()
+            self.regions = self.get_regions(self.mask)
+        #########################
+        
         # create model
         self.G = models.Generator(**config).cuda()
         self.D = models.Discriminator(
@@ -169,24 +185,18 @@ class DGP(object):
                 }
 
                 # calculate losses in the non-degradation space
-                if self.mode in ['reconstruct', 'colorization', 'SR', 'inpainting']:
-                    # x2 is to get the post-processed result in colorization
-                    metrics, x2 = self.get_metrics(x)
-                    loss_dict = {**loss_dict, **metrics}
+                # x2 is to get the post-processed result in colorization
+                metrics, x2 = self.get_metrics(x)
+                loss_dict = {**loss_dict, **metrics}
 
                 if i == 0 or (i + 1) % self.config['print_interval'] == 0:
                     if self.rank == 0:
-                        #print(', '.join(
-                        #    ['Stage: [{0}/{1}]'.format(stage + 1, len(self.iterations))] +
-                        #    ['Iter: [{0}/{1}]'.format(i + 1, iteration)] +
-                        #    ['%s : %+4.4f' % (key, loss_dict[key]) for key in loss_dict]
-                        #))
                         print(', '.join(
                             ['Stage: [{0}/{1}]'.format(stage + 1, len(self.iterations))] +
                             ['Iter: [{0}/{1}]'.format(i + 1, iteration)]
                         ))
                         print("\t\t", "mse_loss: %+4.4f" % loss_dict['mse_loss_origin'])
-                        print("\t\t", "PSNR: %4.4f" % loss_dict['mse_loss_origin'])
+                        print("\t\t", "PSNR: %4.4f" % loss_dict['psnr'])
                         print("\t\t", "SSIM: %4.4f" % loss_dict['ssim'])
                     # save image sheet of the reconstruction process
                     save_imgs = torch.cat((save_imgs, x), dim=0)
@@ -196,14 +206,6 @@ class DGP(object):
                         (self.config['exp_path'], self.img_name, self.mode),
                         nrow=int(save_imgs.size(0)**0.5),
                         normalize=True)
-                    if self.mode == 'colorization':
-                        save_imgs2 = torch.cat((save_imgs2, x2), dim=0)
-                        torchvision.utils.save_image(
-                            save_imgs2.float(),
-                            '%s/images_sheet/%s_%s_2.jpg' %
-                            (self.config['exp_path'], self.img_name, self.mode),
-                            nrow=int(save_imgs.size(0)**0.5),
-                            normalize=True)
 
                 if save_interval is not None:
                     if i == 0 or (i + 1) % save_interval[stage] == 0:
@@ -286,49 +288,33 @@ class DGP(object):
             self.criterion.set_ftr_num(self.ftr_num[0])
 
     def pre_process(self, image, target=True):
-        if self.mode in ['SR', 'hybrid']:
-            # apply downsampling, this part is the same as deep image prior
-            if target:
-                image_pil = utils.np_to_pil(
-                    utils.torch_to_np((image.cpu() + 1) / 2))
-                LR_size = [
-                    image_pil.size[0] // self.factor,
-                    image_pil.size[1] // self.factor
-                ]
-                img_LR_pil = image_pil.resize(LR_size, Image.ANTIALIAS)
-                image = utils.np_to_torch(utils.pil_to_np(img_LR_pil)).cuda()
-                image = image * 2 - 1
-            else:
-                image = self.downsampler((image + 1) / 2)
-                image = image * 2 - 1
-            # interpolate to the orginal resolution via bilinear interpolation
-            image = F.interpolate(
-                image, scale_factor=self.factor, mode='bilinear')
         n, _, h, w = image.size()
-        if self.mode in ['colorization', 'hybrid']:
-            # transform the image to gray-scale
-            r = image[:, 0, :, :]
-            g = image[:, 1, :, :]
-            b = image[:, 2, :, :]
-            gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-            image = gray.view(n, 1, h, w).expand(n, 3, h, w)
-        if self.mode in ['inpainting', 'hybrid']:
-            # remove the center part of the image
-            hole = min(h, w) // 3
-            begin = (h - hole) // 2
-            end = h - begin
-            self.begin, self.end = begin, end
-            mask = torch.ones(1, 1, h, w).cuda()
-            mask[0, 0, begin:end, begin:end].zero_()
-            #print(mask.shape)
-            image = image * mask
-            #image = image * mask.cuda()
-
-###########CREATE MASK
-            #print(h,w)
-            #mask = torch.ones(1, 1, h, w).cuda()
-    
+        if self.mode=='inpainting':
+            if not self.custom_mask:
+                # remove the center part of the image
+                hole = min(h, w) // 3
+                begin = (h - hole) // 2
+                end = h - begin
+                self.begin, self.end = begin, end
+                mask = torch.ones(1, 1, h, w).cuda()
+                mask[0, 0, begin:end, begin:end].zero_()
+                image = image * mask.cuda()
+            else:
+                image = image * self.mask 
         return image
+    
+    ####MY FUNCTION
+    def get_regions(self,mask):
+        x,y = mask.shape
+        t = 16
+        regions = []
+        for x_indx in range(0,x,t):
+            for y_indx in range(0,y,t):
+                if (x_indx+t) < x and (y_indx+t) < y:
+                    if (mask[x:x_indx+t,y:y_indx+t]==1).all():
+                        regions.append((x_indx,x_indx+t,y_indx,y_indx+t))
+            
+        return regions
 
     def get_metrics(self, x):
         with torch.no_grad():
@@ -343,21 +329,30 @@ class DGP(object):
             x_np = (x.detach().cpu().numpy()[0] + 1) / 2
             target_np = np.transpose(target_np, (1, 2, 0))
             x_np = np.transpose(x_np, (1, 2, 0))
-            if self.mode == 'colorization':
-                # combine the 'ab' dim of x with the 'L' dim of target image
-                x_lab = color.rgb2lab(x_np)
-                target_lab = color.rgb2lab(target_np)
-                x_lab[:, :, 0] = target_lab[:, :, 0]
-                x_np = color.lab2rgb(x_lab)
-                x = torch.Tensor(np.transpose(x_np, (2, 0, 1))) * 2 - 1
-                x = x.unsqueeze(0)
-            elif self.mode == 'inpainting':
+            if self.mode == 'inpainting':
                 # only use the inpainted area to calculate ssim and psnr
-                x_np = x_np[self.begin:self.end, self.begin:self.end, :]
-                target_np = target_np[self.begin:self.end,
+                ssim = 0
+                psnr = 0
+                
+                #Calculate metric for selective mask regions
+                if self.custom_mask:
+                    for reg in self.regions:
+                        x_coord = int(reg[0])
+                        x_step = int(reg[1])
+                        y_coord = int(reg[2])
+                        y_step = int(reg[3])
+                        x_np_curr = x_np[x_coord:x_step, y_coord:y_step, :]
+                        target_np_curr = target_np[x_coord:x_step,
+                                              y_coord:y_step, :]
+                        ssim += compare_ssim(target_np_curr, x_np_curr, multichannel=True)/len(self.regions)
+                        psnr += compare_psnr(target_np_curr, x_np_curr)/len(self.regions)
+                else:
+                    x_np = x_np[self.begin:self.end, self.begin:self.end, :]
+                    target_np = target_np[self.begin:self.end,
                                       self.begin:self.end, :]
-            ssim = compare_ssim(target_np, x_np, multichannel=True)
-            psnr = compare_psnr(target_np, x_np)
+                    ssim = compare_ssim(target_np, x_np, multichannel=True)
+                    psnr = compare_psnr(target_np, x_np)
+                        
             metrics['psnr'] = torch.Tensor([psnr]).cuda()
             metrics['ssim'] = torch.Tensor([ssim]).cuda()
             return metrics, x

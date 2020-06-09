@@ -41,9 +41,16 @@ Enter the following command to collect from [ww2db](http://ww2db.com/photo.php)
 python run.py scrape [NUM_IMAGES] [TIME_PERIOD]
 ```
 
-```NUM_IMAGES``` Number of World War II images to scrape
-```TIME_PERIOD``` Time period of images [Pre-War, Mid-War, Late-War]
+```NUM_IMAGES``` Number of World War II images to scrape<br>
+```TIME_PERIOD``` Time period of images [Pre-War, Mid-War, Late-War]<br>
 
+
+**Computing features**
+Enter the following command to compute features on the data collected
+
+```
+python run.py features
+```
 
 **Restoring a test example**
 
@@ -51,6 +58,13 @@ Enter the following command to run the network on the 'Spoils of War' image, jus
 ```
 python run.py test-project
 ```
+
+### Training
+
+**Performing a trained restoration**
+In order to do a trained restoration, you will either need to
+1. Download Pre-trained weights found [here]() and place them into your ```data/out``` directory.
+2. Train your own weights using your collected data. (TBD)
 
 **Running with custom image and mask**
 
@@ -63,7 +77,7 @@ To use your own custom image and mask for restoration, please perform the follow
 python run.py -t [True/False] -i <img> -m <mask.png>
 ```
 
-```-t``` Use a trained model <br>
+```-t``` Use a trained model (e.g weights are located in ```data/out```)<br>
 ```-i``` Degraded image file name<br>
 ```-m``` Mask image file name<br>
 

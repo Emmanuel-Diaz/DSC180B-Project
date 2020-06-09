@@ -32,7 +32,20 @@ pip install -r requirements.txt
 
 ### Usage
 
-**Running a test example**
+
+**Collecting World War II Images**
+
+Enter the following command to collect from [ww2db](http://ww2db.com/photo.php)
+
+```
+python run.py scrape [NUM_IMAGES] [TIME_PERIOD]
+```
+
+```NUM_IMAGES``` Number of World War II images to scrape
+```TIME_PERIOD``` Time period of images [Pre-War, Mid-War, Late-War]
+
+
+**Restoring a test example**
 
 Enter the following command to run the network on the 'Spoils of War' image, just like in the report output.
 ```

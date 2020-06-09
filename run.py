@@ -4,8 +4,7 @@ import subprocess
 from argparse import ArgumentParser
 sys.path.append('./src')
 
-#import etl
-#import test_target
+import data_collection
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -25,9 +24,20 @@ if __name__ =="__main__":
     
     #Calls test-project example
     if targets[0] in ["test", "scrape", "test-project"]:
-        using_mask = False
-        subprocess.call(['./src/run_dgp_inpainting.sh', str(False), 'degraded_spoils_of_war.jpeg', str(using_mask), ''])
-        sys.exit(2)
+
+        if targets[0]=="test-project":
+            using_mask = False
+            subprocess.call(['./src/run_dgp_inpainting.sh', str(False), 'degraded_spoils_of_war.jpeg', str(using_mask), ''])
+            sys.exit(2)
+        if targets[0]=="scrape":
+            scraped_images = data_collection.scrape_ww2_images(int(targets[1]), targets[2])
+            #Save list of scraped images
+            file_to_write('../data/out/'str(targets[2])+'_images.data')
+            with open(file_to_write, 'wb') as filehandle:
+                # store the data as binary data stream
+                pickle.dump(scraped_images, filehandle)
+            print("War images written to", file_to_write)
+            sys.exit(2)
     
     #Create parser for flags
     parser = ArgumentParser(description='Parser for flags')

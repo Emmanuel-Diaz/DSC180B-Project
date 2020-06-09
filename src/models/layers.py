@@ -1,3 +1,5 @@
+#DGP - Xingang Pan
+
 ''' Layers
     This file contains various layers for the BigGAN models.
 '''

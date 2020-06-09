@@ -1,3 +1,5 @@
+#DGP - Xingang Pan
+
 import torch.utils.data as data
 import torchvision.transforms as transforms
 from PIL import Image
